@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePokemonDto } from './dto/create-pokemon.dto';
 import { UpdatePokemonDto } from './dto/update-pokemon.dto';
 import { PaginationDto } from 'src/shared/dtos/pagination.dto';
@@ -10,7 +10,7 @@ export class PokemonsService {
   paginatedPokemonsCache = new Map<string, Pokemon[]>();
 
   create(createPokemonDto: CreatePokemonDto) {
-    return 'This action adds a new pokemon';
+    return `This action adds a new pokemon: ${JSON.stringify(createPokemonDto)}`;
   }
 
   async findAll(paginationDto: PaginationDto): Promise<Pokemon[]> {
@@ -51,6 +51,11 @@ export class PokemonsService {
 
   private async getPokemonInformation(id: number): Promise<Pokemon> {
     const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+
+    if (response.status === 404) {
+      throw new NotFoundException(`Pokemon with id ${id} not found`);
+    }
+
     const data = (await response.json()) as PokeapiPokemonResponse;
     return {
       id,
