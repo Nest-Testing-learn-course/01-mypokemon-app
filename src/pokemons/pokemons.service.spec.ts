@@ -17,12 +17,10 @@ describe('PokemonsService', () => {
     expect(service).toBeDefined();
   });
 
-  it('should create a pokemon', () => {
+  it('should create a pokemon', async () => {
     const data = { name: 'bulbasaur', type: 'grass' };
-    const newPokemon = service.create(data);
-    expect(newPokemon).toBe(
-      `This action adds a new pokemon: ${JSON.stringify(data)}`,
-    );
+    const newPokemon = await service.create(data);
+    expect(newPokemon).toBe(`This action adds a new pokemon: ${data.name}`);
   });
 
   it('should return a pokemon if exists', async () => {
