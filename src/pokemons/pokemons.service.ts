@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreatePokemonDto } from './dto/create-pokemon.dto';
 import { UpdatePokemonDto } from './dto/update-pokemon.dto';
 import { PaginationDto } from 'src/shared/dtos/pagination.dto';
@@ -8,11 +12,27 @@ import { Pokemon } from './entities/pokemon.entity';
 @Injectable()
 export class PokemonsService {
   paginatedPokemonsCache = new Map<string, Pokemon[]>();
+  pokemonsCache = new Map<number, Pokemon>();
 
-  create(createPokemonDto: CreatePokemonDto) {
-    return Promise.resolve(
-      `This action adds a new pokemon: ${createPokemonDto.name}`,
-    );
+  async create(createPokemonDto: CreatePokemonDto) {
+    const pokemon: Pokemon = {
+      ...createPokemonDto,
+      id: new Date().getTime(),
+      hp: createPokemonDto.hp ?? 100,
+      sprites: createPokemonDto.sprites ?? [],
+    };
+
+    this.pokemonsCache.forEach((storedPokemon) => {
+      if (pokemon.name === storedPokemon.name) {
+        throw new BadRequestException(
+          `Pokemon with name ${pokemon.name} already exists`,
+        );
+      }
+    });
+
+    this.pokemonsCache.set(pokemon.id, pokemon);
+
+    return Promise.resolve(pokemon);
   }
 
   async findAll(paginationDto: PaginationDto): Promise<Pokemon[]> {
@@ -35,22 +55,42 @@ export class PokemonsService {
     });
     const pokemons = await Promise.all(pokemonResponses);
     this.paginatedPokemonsCache.set(cacheKey, pokemons);
-    return pokemons;
+    return Promise.resolve(pokemons);
   }
 
   async findOne(id: number) {
+    if (this.pokemonsCache.has(id)) {
+      return this.pokemonsCache.get(id)!;
+    }
+
     const pokemon = await this.getPokemonInformation(id);
-    return pokemon;
+
+    this.pokemonsCache.set(id, pokemon);
+    return Promise.resolve(pokemon);
   }
 
-  update(id: number, updatePokemonDto: UpdatePokemonDto) {
-    return Promise.resolve(
-      `This action updates a #${id} pokemon: ${updatePokemonDto.name}`,
-    );
+  async update(id: number, updatePokemonDto: UpdatePokemonDto) {
+    const pokemon = this.pokemonsCache.get(id);
+    if (!pokemon) {
+      throw new BadRequestException(`Pokemon with id ${id} not found`);
+    }
+
+    const updatedPokemon = {
+      ...pokemon,
+      ...updatePokemonDto,
+    };
+
+    this.pokemonsCache.set(id, updatedPokemon);
+
+    return Promise.resolve(updatedPokemon);
   }
 
-  remove(id: number) {
-    return Promise.resolve(`This action removes a #${id} pokemon`);
+  async remove(id: number) {
+    await this.findOne(id);
+
+    this.pokemonsCache.delete(id);
+
+    return Promise.resolve(`pokemon with id #${id} deleted`);
   }
 
   private async getPokemonInformation(id: number): Promise<Pokemon> {

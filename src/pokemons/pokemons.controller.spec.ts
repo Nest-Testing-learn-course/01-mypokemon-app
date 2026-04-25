@@ -4,6 +4,7 @@ import { PokemonsService } from './pokemons.service';
 import { PaginationDto } from 'src/shared/dtos/pagination.dto';
 import { Pokemon } from './entities/pokemon.entity';
 import { UpdatePokemonDto } from './dto/update-pokemon.dto';
+import { CreatePokemonDto } from './dto/create-pokemon.dto';
 
 const mockPokemons: Pokemon[] = [
   {
@@ -46,7 +47,18 @@ describe('PokemonsController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should have call the service with correct parameters', async () => {
+  it('should have call the service with correct parameters (create)', async () => {
+    const dto: CreatePokemonDto = { name: 'bulbasaur', type: 'grass' };
+
+    jest.spyOn(service, 'create');
+
+    await controller.create(dto);
+
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(service.create).toHaveBeenCalledWith(dto);
+  });
+
+  it('should have call the service with correct parameters (findAll)', async () => {
     const dto: PaginationDto = { page: 1, limit: 10 };
 
     jest.spyOn(service, 'findAll');
@@ -57,7 +69,7 @@ describe('PokemonsController', () => {
     expect(service.findAll).toHaveBeenCalledWith(dto);
   });
 
-  it('should have called the service and check the response', async () => {
+  it('should have called the service and check the response (findAll)', async () => {
     const dto: PaginationDto = { page: 1, limit: 10 };
 
     jest
@@ -89,15 +101,27 @@ describe('PokemonsController', () => {
     const id = '1';
     const dto: UpdatePokemonDto = { name: 'bulbasaur', type: 'grass' };
 
-    jest
-      .spyOn(service, 'update')
-      .mockImplementation(async () => Promise.resolve('updated'));
+    jest.spyOn(service, 'update').mockImplementation(async () =>
+      Promise.resolve({
+        id: 1,
+        name: 'bulbasaur',
+        type: 'grass',
+        hp: 100,
+        sprites: [],
+      }),
+    );
 
     const result = await controller.update(id, dto);
 
     // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(service.update).toHaveBeenCalledWith(+id, dto);
-    expect(result).toBe('updated');
+    expect(result).toEqual({
+      id: 1,
+      name: 'bulbasaur',
+      type: 'grass',
+      hp: 100,
+      sprites: [],
+    });
   });
 
   it('should have call the service with correct id (delete)', async () => {
