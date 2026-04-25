@@ -1,8 +1,9 @@
 import { Pokemon } from './pokemon.entity';
 
 describe('PokemonEntity', () => {
-  it('should be defined', () => {
-    expect(new Pokemon()).toBeDefined();
+  it('should create and instance of Pokemon', () => {
+    const pokemon = new Pokemon();
+    expect(pokemon).toBeInstanceOf(Pokemon);
   });
 
   it('should assign and retrieve properties correctly', () => {

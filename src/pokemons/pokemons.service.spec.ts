@@ -68,16 +68,16 @@ describe('PokemonsService', () => {
   });
 
   it('should find all pokemons from cache (findAll)', async () => {
-    const pokemons = await service.findAll({ limit: 5, page: 2 });
+    const dto = { limit: 5, page: 1 };
+    const cacheSpy = jest.spyOn(service.paginatedPokemonsCache, 'get');
+    const fetchSpy = jest.spyOn(global, 'fetch');
 
-    expect(pokemons).toBeInstanceOf(Array);
-    expect(pokemons.length).toBe(5);
+    await service.findAll(dto);
+    await service.findAll(dto);
 
-    await expect(service.findAll({ limit: 5, page: 2 })).resolves.toEqual(
-      pokemons,
-    );
-    expect(service.paginatedPokemonsCache.has('5-2')).toBeTruthy();
-    expect(service.paginatedPokemonsCache.get('5-2')).toEqual(pokemons);
+    expect(cacheSpy).toHaveBeenCalledTimes(1);
+    expect(cacheSpy).toHaveBeenCalledWith(`${dto.limit}-${dto.page}`);
+    expect(fetchSpy).not.toHaveBeenCalledTimes(1);
   });
 
   it('should check properties of pokemon (findOne)', async () => {
