@@ -9,6 +9,7 @@ import {
 
 export class CreatePokemonDto {
   @IsString()
+  @IsNotEmpty()
   name: string;
 
   @IsString()
