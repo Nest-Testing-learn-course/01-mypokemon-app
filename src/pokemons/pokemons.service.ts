@@ -90,6 +90,7 @@ export class PokemonsService {
 
     this.pokemonsCache.delete(id);
 
+    // return Promise.resolve({ message: `pokemon with id #${id} deleted` });
     return Promise.resolve(`pokemon with id #${id} deleted`);
   }
 
